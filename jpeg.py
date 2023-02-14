@@ -1,4 +1,3 @@
-import header as h
 import functions as f
 
 
@@ -16,7 +15,7 @@ def main():
 
     # Read image (3.1)
     image_path = "imagens\logo.bmp"
-    image = h.plt.imread(image_path)
+    image = f.plt.imread(image_path)
 
     # Create a colormap (3.2)
     cmUser = f.colormap('cmUser', [(0, 0, 0), (1, 1, 1)], 256)
