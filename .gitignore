@@ -1,0 +1,8 @@
+# Ignore __pycache__ and .pyc files
+__pycache__/
+*.pyc
+
+# Only track the imagens folder, the imagens JPEG folder and the python files
+imagens/
+imagens/JPEG/
+*.py
