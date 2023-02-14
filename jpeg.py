@@ -1,4 +1,5 @@
 import header as h
+import functions as f
 
 
 def encoder(image_path):
@@ -18,31 +19,31 @@ def main():
     image = h.plt.imread(image_path)
 
     # Create a colormap (3.2)
-    cmUser = h.colormap('cmUser', [(0, 0, 0), (1, 0, 0)], 256)
+    cmUser = f.colormap('cmUser', [(0, 0, 0), (1, 1, 1)], 256)
 
     # Visualize image with a colormap (3.3)
-    h.image_colormap(image, cmUser)
+    f.image_colormap(image, cmUser)
 
     # Separate the image in 3 channels (3.4)
-    R, G, B = h.separate_RGB(image)
+    R, G, B = f.separate_RGB(image)
 
     # Merge the 3 channels into an image (3.4)
-    image = h.merge_RGB(R, G, B)
+    image = f.merge_RGB(R, G, B)
 
     # Visualize the image and each one of its channels (with the adequate colormap) (3.5)
-    h.visualize_RGB(R, G, B)
+    f.visualize_RGB(R, G, B)
 
     # Padding of the image (4.1)
-    image = h.padding(image, 2)
+    image = f.padding(image, 2)
 
     # Convert image from RGB to YCbCr (5.1)
-    Y, Cb, Cr = h.RGB_to_YCbCr(image)
+    image = f.RGB_to_YCbCr(image)
 
     # Convert image from YCbCr to RGB (5.1)
-    image = h.YCbCr_to_RGB(Y, Cb, Cr)
+    image = f.YCbCr_to_RGB(image)
 
     # Visualize the image and its YCbCr components (5.2)
-    h.visualize_YCbCr(Y, Cb, Cr)
+    f.visualize_YCbCr(image)
 
 
 if __name__ == '__main__':
