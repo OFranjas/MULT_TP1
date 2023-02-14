@@ -6,3 +6,5 @@ __pycache__/
 imagens/
 imagens/JPEG/
 *.py
+__pycache__/functions.cpython-310.pyc
+__pycache__/header.cpython-310.pyc
