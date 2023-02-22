@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
+import cv2
 
 
 def colormap(name, colors, N):
@@ -21,7 +22,7 @@ def image_colormap(image, cm):
 
     plt.axis('off')
 
-    plt.title('Image with colormap')
+    plt.title('Imagem com colormap')
 
     plt.colorbar()
 
@@ -83,37 +84,72 @@ def visualize_RGB(R, G, B):
 # Padding of the image (4.1)
 
 
-def padding(image, padding):
+def padding(image):
 
-    image = np.pad(image, ((padding, padding),
-                           (padding, padding), (0, 0)), 'constant')
+    [nl, nc, x] = image.shape
 
-    return image
+    nnl = 32 - nl % 32/589
+
+    nnc = 32 - nc % 32
+
+    ll = image[nl-1, :][np.newaxis, :]  # Horizontalmente
+
+    rep = ll.repeat(nnl, axis=0)
+
+    image_nova = np.vstack([image, rep])
+
+    cc = image_nova[:, nc-1][:, np.newaxis]  # Verticalmente
+
+    rep = cc.repeat(nnc, axis=1)
+
+    image_nova = np.hstack([image_nova, rep])
+
+    plt.imshow(image_nova)
+
+    plt.title("Imagem com padding")
+
+    plt.axis('off')
+
+    plt.show()
+
+    return image_nova
+
+
+def unpadding(image, origin):
+
+    [nl, nc, x] = origin.shape
+
+    original_image = image[:nl, :nc]
+
+    plt.imshow(original_image)
+
+    plt.title("Imagem depois de unpadding")
+
+    plt.axis('off')
+
+    plt.show()
+
+    return original_image
+
 
 # Convert image from RGB to YCbCr (5.1)
 
 
-def RGB_to_YCbCr(image):
+def RGB_to_YCbCr(R, G, B):
 
     T = np.array(
         [[0.299, 0.587, 0.114], [-0.1687, -0.3313, 0.5], [0.5, -0.4187, -0.0813]])
-
-    R, G, B = separate_RGB(image)
 
     Y = T[0, 0]*R + T[0, 1]*G + T[0, 2]*B
     Cb = T[1, 0]*R + T[1, 1]*G + T[1, 2]*B + 128
     Cr = T[2, 0]*R + T[2, 1]*G + T[2, 2]*B + 128
 
-    image = merge_RGB(Y, Cb, Cr)
-
-    return image
+    return Y, Cb, Cr
 
 # Convert image from YCbCr to RGB (5.1)
 
 
-def YCbCr_to_RGB(image):
-
-    Y, Cb, Cr = separate_RGB(image)
+def YCbCr_to_RGB(Y, Cb, Cr):
 
     T = np.array(
         [[0.299, 0.587, 0.114], [-0.1687, -0.3313, 0.5], [0.5, -0.4187, -0.0813]])
@@ -138,18 +174,14 @@ def YCbCr_to_RGB(image):
     B[B < 0] = 0
     B = np.round(B).astype(np.uint8)
 
-    image = merge_RGB(R, G, B)
-
-    return image
+    return R, G, B
 
 # Visualize the image and its YCbCr components (5.2)
 
 
-def visualize_YCbCr(image):
+def visualize_YCbCr(Y, Cb, Cr, image):
 
     cmGray = colormap('cmGray', [(0, 0, 0), (1, 1, 1)], 256)
-
-    Y, Cb, Cr = separate_RGB(image)
 
     plt.figure()
 
@@ -169,8 +201,38 @@ def visualize_YCbCr(image):
     plt.title('Cr')
 
     plt.subplot(2, 2, 4)
-    plt.imshow(merge_RGB(Y, Cb, Cr))
+    plt.imshow(image, cmap="Blues")
     plt.axis('off')
     plt.title('Original')
 
     plt.show()
+
+
+# Sub Sampling of the image's YCbCr components (6.1) Downsampling using cv2.resize
+
+# def downsampling(Y, Cb, Cr):
+
+#     Y_d = cv2.resize(Y, (0, 0), fx=0.5, fy=0.5,
+#                      interpolation=cv2.INTER_NEAREST)
+
+#     Cb_d = cv2.resize(Cb, (0, 0), fx=0.5, fy=0.5,
+#                       interpolation=cv2.INTER_NEAREST)
+
+#     Cr_d = cv2.resize(Cr, (0, 0), fx=0.5, fy=0.5,
+#                       interpolation=cv2.INTER_NEAREST)
+
+#     return Y_d, Cb_d, Cr_d
+
+
+# def upsampling(Y_d, Cb_d, Cr_d):
+
+#     Y_u = cv2.resize(Y_d, (0, 0), fx=2, fy=2,
+#                      interpolation=cv2.INTER_NEAREST)
+
+#     Cb_u = cv2.resize(Cb_d, (0, 0), fx=2, fy=2,
+#                       interpolation=cv2.INTER_NEAREST)
+
+#     Cr_u = cv2.resize(Cr_d, (0, 0), fx=2, fy=2,
+#                       interpolation=cv2.INTER_NEAREST)
+
+#     return Y_u, Cb_u, Cr_u
