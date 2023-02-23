@@ -15,6 +15,31 @@ def encoder(image):
     # Convert image from RGB to YCbCr (5.1)
     Y, Cb, Cr = f.RGB_to_YCbCr(R, G, B)
 
+    print(Y.shape, Cb.shape, Cr.shape)
+
+    # Downsample the channels
+
+    Y_d, Cb_d, Cr_d = f.downsampling(Y, Cb, Cr, [4, 2, 0])
+
+    # Print the dimensions of the downsampled channels
+    print(Y_d.shape, Cb_d.shape, Cr_d.shape)
+
+    # Up-sample the channels
+    Y_u, Cb_u, Cr_u = f.upsampling(Y_d, Cb_d, Cr_d, [4, 2, 0])
+
+    # Print the dimensions of the upsampled channels
+    print(Y_u.shape, Cb_u.shape, Cr_u.shape)
+
+    # DCT of channel
+
+    Y_dct = f.dct_channel(Y_u)
+
+    print(Y_dct.shape)
+
+    Y_novo = f.idct_channel(Y_dct)
+
+    print(Y_novo.shape)
+
     # Junta aqui porque não estava a dar dentro da função...
     image_y = f.merge_RGB(Y, Cb, Cr)
 
