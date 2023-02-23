@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
+from scipy import fftpack as fft
 import cv2
 import scipy.fftpack as scp
 
@@ -334,4 +335,33 @@ def idct_channel(channel):
 
     X_idct = scp.idct(scp.idct(channel, norm="ortho").T, norm="ortho").T
 
-    return X_idct
+
+def dct(X: np.ndarray) -> np.ndarray:
+    return fft.dct(fft.dct(X, norm="ortho").T, norm="ortho").T
+
+
+def idct(X: np.ndarray) -> np.ndarray:
+    return fft.idct(fft.idct(X, norm="ortho").T, norm="ortho").T
+
+def visualize_Dct(x1: np.ndarray, x2: np.ndarray, x3: np.ndarray) -> None:
+    x1log = np.log(np.abs(x1) + 0.0001)
+    x2log = np.log(np.abs(x2) + 0.0001)
+    x3log = np.log(np.abs(x3) + 0.0001)
+    visualize_YCbCr(x1log, x2log, x3log)
+    
+def blocks_Dct(x: np.ndarray, size: int = 8) -> np.ndarray:
+    h, w = x.shape
+    newImg = np.empty(x.shape)
+    for i in range(0, h, size):
+        for j in range(0, w, size):
+            newImg[i:i+size, j:j+size] = dct(x[i:i+size, j:j+size])
+    return newImg
+
+
+def blocks_Idct(x: np.ndarray, size: int = 8) -> np.ndarray:
+    h, w = x.shape
+    newImg = np.empty(x.shape)
+    for i in range(0, h, size):
+        for j in range(0, w, size):
+            newImg[i:i+size, j:j+size] = idct(x[i:i+size, j:j+size])
+    return newImg
