@@ -1,3 +1,2 @@
 # Ignore folder __pycache__ and all files in it
-__pycache__/
-*.pyc
+__pycache__
