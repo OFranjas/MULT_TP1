@@ -59,7 +59,7 @@ def visualize_RGB(R, G, B):
 
     cmGray = colormap('cmGray', [(0, 0, 0), (1, 1, 1)], 256)
 
-    plt.figure()
+    plt.figure("RGB channels")
 
     plt.subplot(2, 2, 1)
     plt.imshow(R, cmap=cmGray)
@@ -79,7 +79,7 @@ def visualize_RGB(R, G, B):
     plt.subplot(2, 2, 4)
     plt.imshow(merge_RGB(R, G, B))
     plt.axis('off')
-    plt.title('Original')
+    plt.title('Merged Channels')
     plt.show()
 
 
@@ -181,11 +181,9 @@ def YCbCr_to_RGB(Y, Cb, Cr):
 # Visualize the image and its YCbCr components (5.2)
 
 
-def visualize_YCbCr(Y, Cb, Cr, image):
+def visualize_YCbCr(Y, Cb, Cr):
 
     cmGray = colormap('cmGray', [(0, 0, 0), (1, 1, 1)], 256)
-
-    plt.figure()
 
     plt.subplot(2, 2, 1)
     plt.imshow(Y, cmap=cmGray)
@@ -193,50 +191,44 @@ def visualize_YCbCr(Y, Cb, Cr, image):
     plt.title('Y')
 
     plt.subplot(2, 2, 2)
-    plt.imshow(Cb, cmap="Blues")
+    plt.imshow(Cb, cmap=cmGray)
     plt.axis('off')
     plt.title('Cb')
 
     plt.subplot(2, 2, 3)
-    plt.imshow(Cr, cmap="Blues")
+    plt.imshow(Cr, cmap=cmGray)
     plt.axis('off')
     plt.title('Cr')
 
-    plt.subplot(2, 2, 4)
-    plt.imshow(image, cmap="Blues")
-    plt.axis('off')
-    plt.title('Original')
-
-    plt.show()
+    # plt.show()
 
 
-# Function to sub-sample the channels Y, Cb and Cr according to the JPEG codec
-# It receives the channels Y, Cb and Cr and the subsampling factor
-# It returns Y_d, Cb_d and Cr_d, the downsampled channels
+# Downsampling of the image (6.1)
 def downsampling(Y, Cb, Cr, factor):
 
     if factor[2] == 0:
 
-        percent_y = factor[0]/factor[1]
+        #percent_y = factor[0]/factor[1]
         percent_cb = factor[0]/factor[1]
         percent_cr = factor[0]/factor[1]
 
-        y_d = int(Y.shape[1] / percent_y)
+        #y_d = int(Y.shape[1] / percent_y)
         cb_d = int(Cb.shape[1] / percent_cb)
         cr_d = int(Cr.shape[1] / percent_cr)
-        y_dy = int(Y.shape[0] / percent_y)
+        #y_dy = int(Y.shape[0] / percent_y)
         cb_dy = int(Cb.shape[0] / percent_cb)
         cr_dy = int(Cr.shape[0] / percent_cr)
 
-        Y_down = cv2.resize(
-            Y, (y_d, y_dy), interpolation=cv2.INTER_AREA)
+        # Y_down = cv2.resize(
+        #     Y, (y_d, y_dy), interpolation=cv2.INTER_AREA)
+
         Cb_down = cv2.resize(
             Cb, (cb_d, cb_dy), interpolation=cv2.INTER_AREA)
 
         Cr_down = cv2.resize(
             Cr, (cr_d, cr_dy), interpolation=cv2.INTER_AREA)
 
-        return Y_down, Cb_down, Cr_down
+        return Y, Cb_down, Cr_down
 
     elif factor[1] == 0:
 
@@ -261,37 +253,45 @@ def downsampling(Y, Cb, Cr, factor):
         Cr_down = cv2.resize(
             src=Cr, dsize=(cr_d, Y.shape[0]), interpolation=cv2.INTER_AREA)
 
-        return Y_down, Cb_down, Cr_down
+        return Y, Cb_down, Cr_down
 
 
-# Function to sub-sample the channels Y, Cb and Cr according to the JPEG codec
-# It receives the channels Y_d, Cb_d and Cr_d and the subsampling factor
-# It returns Y, Cb and Cr, the upsampled channels
-# The resulting values have to be equal to the original image
-def upsampling(Y_d, Cb_d, Cr_d, factor):
+# Upsampling of the image (6.1)
+def upsampling(Y, Cb_d, Cr_d, factor, shape):
 
     if factor[2] == 0:
 
-        percent_y = factor[0]/factor[1]
+        #percent_y = factor[0]/factor[1]
         percent_cb = factor[0]/factor[1]
         percent_cr = factor[0]/factor[1]
 
-        y_d = int(Y_d.shape[1] * percent_y)
-        cb_d = int(Cb_d.shape[1] * percent_cb)
-        cr_d = int(Cr_d.shape[1] * percent_cr)
-        y_dy = int(Y_d.shape[0] * percent_y)
-        cb_dy = int(Cb_d.shape[0] * percent_cb)
-        cr_dy = int(Cr_d.shape[0] * percent_cr)
+        #y_u = int(Y_d.shape[1] * percent_y)
+        cb_u = int(Cb_d.shape[1] * percent_cb)
+        cr_u = int(Cr_d.shape[1] * percent_cr)
+        #y_uy = int(Y_d.shape[0] * percent_y)
+        cb_uy = int(Cb_d.shape[0] * percent_cb)
+        cr_uy = int(Cr_d.shape[0] * percent_cr)
 
-        Y_up = cv2.resize(
-            Y_d, (y_d, y_dy), interpolation=cv2.INTER_CUBIC)
+        if (shape[1] % 2 != 0):
+            #y_u += 1
+            cb_u += 1
+            cr_u += 1
+
+        if (shape[0] % 2 != 0):
+            #y_uy += 1
+            cb_uy += 1
+            cr_uy += 1
+
+        # Y_up = cv2.resize(
+        #     Y_d, (y_u, y_uy), interpolation=cv2.INTER_CUBIC)
+
         Cb_up = cv2.resize(
-            Cb_d, (cb_d, cb_dy), interpolation=cv2.INTER_CUBIC)
+            Cb_d, (cb_u, cb_uy), interpolation=cv2.INTER_CUBIC)
 
         Cr_up = cv2.resize(
-            Cr_d, (cr_d, cr_dy), interpolation=cv2.INTER_CUBIC)
+            Cr_d, (cr_u, cr_uy), interpolation=cv2.INTER_CUBIC)
 
-        return Y_up, Cb_up, Cr_up
+        return Y, Cb_up, Cr_up
 
     elif factor[1] == 0:
 
@@ -299,41 +299,29 @@ def upsampling(Y_d, Cb_d, Cr_d, factor):
 
     else:
 
-        percent_y = factor[0]/factor[1]
+        #percent_y = factor[0]/factor[1]
         percent_cb = factor[0]/factor[1]
         percent_cr = factor[0]/factor[2]
 
-        y_d = int(Y_d.shape[1] * percent_y)
-        cb_d = int(Cb_d.shape[1] * percent_cb)
-        cr_d = int(Cr_d.shape[1] * percent_cr)
+        #y_u = int(Y_d.shape[1] * percent_y)
+        cb_u = int(Cb_d.shape[1] * percent_cb)
+        cr_u = int(Cr_d.shape[1] * percent_cr)
 
-        Y_up = cv2.resize(
-            src=Y_d, dsize=(y_d, Y_d.shape[0]), interpolation=cv2.INTER_CUBIC)
+        if (shape[1] % 2 != 0):
+            #y_u += 1
+            cb_u += 1
+            cr_u += 1
+
+        # Y_up = cv2.resize(
+        #     src=Y_d, dsize=(y_u, Y_d.shape[0]), interpolation=cv2.INTER_CUBIC)
 
         Cb_up = cv2.resize(
-            src=Cb_d, dsize=(cb_d, Y_d.shape[0]), interpolation=cv2.INTER_CUBIC)
+            src=Cb_d, dsize=(cb_u, Y.shape[0]), interpolation=cv2.INTER_CUBIC)
 
         Cr_up = cv2.resize(
-            src=Cr_d, dsize=(cr_d, Y_d.shape[0]), interpolation=cv2.INTER_CUBIC)
+            src=Cr_d, dsize=(cr_u, Y.shape[0]), interpolation=cv2.INTER_CUBIC)
 
-        return Y_up, Cb_up, Cr_up
-
-# DCT transformation of a channel
-# Using the function dct from the scipy.fftpack library
-
-
-def dct_channel(channel):
-
-    X_dct = scp.dct(scp.dct(channel, norm="ortho").T, norm="ortho").T
-
-    return X_dct
-
-# Inverse DCT transformation of a channel
-# Using the function idct from the scipy.fftpack library
-
-def idct_channel(channel):
-
-    X_idct = scp.idct(scp.idct(channel, norm="ortho").T, norm="ortho").T
+        return Y, Cb_up, Cr_up
 
 
 def dct(X: np.ndarray) -> np.ndarray:
@@ -343,12 +331,23 @@ def dct(X: np.ndarray) -> np.ndarray:
 def idct(X: np.ndarray) -> np.ndarray:
     return fft.idct(fft.idct(X, norm="ortho").T, norm="ortho").T
 
+
 def visualize_Dct(x1: np.ndarray, x2: np.ndarray, x3: np.ndarray) -> None:
     x1log = np.log(np.abs(x1) + 0.0001)
     x2log = np.log(np.abs(x2) + 0.0001)
     x3log = np.log(np.abs(x3) + 0.0001)
+
+    #image = merge_RGB(x1log, x2log, x3log)
+
     visualize_YCbCr(x1log, x2log, x3log)
-    
+
+    plt.subplot(2, 2, 4)
+    plt.imshow(merge_RGB(x1log, x2log, x3log))
+    plt.title("DCT")
+    plt.axis("off")
+    plt.show()
+
+
 def blocks_Dct(x: np.ndarray, size: int = 8) -> np.ndarray:
     h, w = x.shape
     newImg = np.empty(x.shape)

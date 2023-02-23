@@ -2,7 +2,7 @@ import functions as f
 import matplotlib.pyplot as plt
 
 
-def encoder(image):
+def encoder(image, factor, show):
 
     # Separate the image in 3 channels (3.4)
     R, G, B = f.separate_RGB(image)
@@ -16,104 +16,34 @@ def encoder(image):
     # Convert image from RGB to YCbCr (5.1)
     Y, Cb, Cr = f.RGB_to_YCbCr(R, G, B)
 
-    print(Y.shape, Cb.shape, Cr.shape)
-
     # Downsample the channels
+    Y_d, Cb_d, Cr_d = f.downsampling(Y, Cb, Cr, factor)
 
-    Y_d, Cb_d, Cr_d = f.downsampling(Y, Cb, Cr, [4, 2, 0])
-
-    # Print the dimensions of the downsampled channels
-    print(Y_d.shape, Cb_d.shape, Cr_d.shape)
-
-    # Up-sample the channels
-    Y_u, Cb_u, Cr_u = f.upsampling(Y_d, Cb_d, Cr_d, [4, 2, 0])
-
-    # Print the dimensions of the upsampled channels
-    print(Y_u.shape, Cb_u.shape, Cr_u.shape)
-
-    # DCT of channel
-
-    Y_dct = f.dct_channel(Y_u)
-
-    print(Y_dct.shape)
-
-    Y_novo = f.idct_channel(Y_dct)
-
-    print(Y_novo.shape)
-
-    # Junta aqui porque não estava a dar dentro da função...
-    image_y = f.merge_RGB(Y, Cb, Cr)
-
-    f.visualize_YCbCr(Y, Cb, Cr, image)
-
-    return Y, Cb, Cr, image_padded
-
-
-def decoder(Y, Cb, Cr, image_padded, original):
-
-    # Transforma de volta RGB
-    R, G, B = f.YCbCr_to_RGB(Y, Cb, Cr)
-
-    # Visualiza imagem com canais separados
-    f.visualize_RGB(R, G, B)
-
-    # Faz unpadding
-    unpadded = f.unpadding(image_padded, original)
-
-    # Junta canais
-    image = f.merge_RGB(R, G, B)
-
-    return unpadded, image
-
-
-def main():
-    show = True
-    # Read image (3.1)
-    image_path = "imagens\\barn_mountains.bmp"
-    image = f.plt.imread(image_path)
-
-    # Create a colormap (3.2)
-    cmUser = f.colormap('cmUser', [(0, 0, 0), (1, 1, 1)], 256)
-
-    # Visualize image with a colormap (3.3)
-    f.image_colormap(image, cmUser)
-
-    Y, Cb, Cr, padded = encoder(image)
-
-    # decoder(Y, Cb, Cr, padded, image)
+    # Show image with downsampled channels
+    if show:
+        plt.figure("Downsampled channels")
+        # downsampled = f.merge_RGB(Y_d, Cb_d, Cr_d)
+        f.visualize_YCbCr(Y_d, Cb_d, Cr_d)
+        plt.show()
 
     # Whole-image DCT
-    # plt.figure("Whole-image DCT")
-    # Y = dct(Y)
-    # Cb = dct(Cb)
-    # Cr = dct(Cr)
-    # f.visualize_Dct(Y, Cb, Cr)
-
-    # Whole-image inverse DCT
-    # plt.figure("Whole-image Inverse DCT")
-    # Y = idct(Y)
-    # Cb = idct(Cb)
-    # Cr = idct(Cr)
-    # f.visualize_YCbCr(Y, Cb, Cr)
-
+    Y_w = f.dct(Y)
+    Cb_w = f.dct(Cb)
+    Cr_w = f.dct(Cr)
+    if show:
+        plt.figure("Whole-image DCT")
+        f.visualize_Dct(Y_w, Cb_w, Cr_w)
 
     # Blocks DCT
     block = 8
-    Y = f.blocks_Dct(Y, size=block)
-    Cb = f.blocks_Dct(Cb, size=block)
-    Cr = f.blocks_Dct(Cr, size=block)
+    Y_b = f.blocks_Dct(Y, size=block)
+    Cb_b = f.blocks_Dct(Cb, size=block)
+    Cr_b = f.blocks_Dct(Cr, size=block)
     if show:
         plt.figure("Block DCT (8x8)")
-        f.visualize_Dct(Y, Cb, Cr)
+        f.visualize_Dct(Y_b, Cb_b, Cr_b)
 
-    # Inverse Block DCT
-    Y = f.blocks_Idct(Y, size=block)
-    Cb = f.blocks_Idct(Cb, size=block)
-    Cr = f.blocks_Idct(Cr, size=block)
-    if show:
-        plt.figure("Block Inverse DCT")
-        f.visualize_YCbCr(Y, Cb, Cr)
-
+    # 64 x 64 blocks DCT
     block = 64
     dY = f.blocks_Dct(Y, size=block)
     dCb = f.blocks_Dct(Cb, size=block)
@@ -122,14 +52,89 @@ def main():
         plt.figure("Block DCT (64x64)")
         f.visualize_Dct(dY, dCb, dCr)
 
+    return [R, G, B], [Y, Cb, Cr], [Y_d, Cb_d, Cr_d], [Y_w, Cb_w, Cr_w], [Y_b, Cb_b, Cr_b], [dY, dCb, dCr], image_padded
+
+
+def decoder(RGBchannels, YCbCrchannels, downsampled, whole_image, blocks, blocks64, image_padded, original, factor, show):
+
+    # Transforma de volta RGB
+    R, G, B = f.YCbCr_to_RGB(
+        YCbCrchannels[0], YCbCrchannels[1], YCbCrchannels[2])
+
+    # Visualiza imagem com canais separados
+    if show:
+        f.visualize_RGB(R, G, B)
+
+    # Faz unpadding
+    unpadded = f.unpadding(image_padded, original)
+
+    # Up-sample the channels
+    Y_u, Cb_u, Cr_u = f.upsampling(
+        downsampled[0], downsampled[1], downsampled[2], factor, original.shape)
+
+    # Show image with upsampled channels
+    if show:
+        plt.figure("Upsampled channels")
+        # upsampled = f.merge_RGB(Y_u, Cb_u, Cr_u)
+        f.visualize_YCbCr(Y_u, Cb_u, Cr_u)
+        plt.show()
+
+    # Whole-image inverse DCT
+
+    Y_w = f.idct(whole_image[0])
+    Cb_w = f.idct(whole_image[1])
+    Cr_w = f.idct(whole_image[2])
+    if show:
+        plt.figure("Whole-image Inverse DCT")
+        # inverse_w = f.merge_RGB(Y_w, Cb_w, Cr_w)
+        f.visualize_YCbCr(Y_w, Cb_w, Cr_w)
+        plt.show()
+
     # Inverse Block DCT
-    Y = f.blocks_Idct(Y, size=block)
-    Cb = f.blocks_Idct(Cb, size=block)
-    Cr = f.blocks_Idct(Cr, size=block)
+    block = 8
+    Y_b = f.blocks_Idct(blocks[0], size=block)
+    Cb_b = f.blocks_Idct(blocks[1], size=block)
+    Cr_b = f.blocks_Idct(blocks[2], size=block)
     if show:
         plt.figure("Block Inverse DCT")
-        f.visualize_YCbCr(Y, Cb, Cr)
-    
+        # image = f.merge_RGB(Y_b, Cb_b, Cr_b)
+        f.visualize_YCbCr(Y_b, Cb_b, Cr_b)
+        plt.show()
+
+    # Inverse 64 Block DCT
+    block = 64
+    dY = f.blocks_Idct(blocks64[0], size=block)
+    dCb = f.blocks_Idct(blocks64[1], size=block)
+    dCr = f.blocks_Idct(blocks64[2], size=block)
+    if show:
+        plt.figure("Block Inverse DCT (64x64)")
+        # image = f.merge_RGB(dY, dCb, dCr)
+        f.visualize_YCbCr(dY, dCb, dCr)
+        plt.show()
+
+    return
+
+
+def main():
+    show = True
+
+    factor = [4, 2, 0]
+
+    # Read image (3.1)
+    image_path = "imagens\\barn_mountains.bmp"
+    image = f.plt.imread(image_path)
+
+    # Create a colormap (3.2)
+    cmUser = f.colormap('cmUser', [(0, 0, 0), (1, 1, 1)], 256)
+
+    # Visualize image with a colormap (3.3)
+    # f.image_colormap(image, cmUser)
+
+    RGBchannels, YCbCrchannels, downsampled, whole_image, blocks, blocks64, image_padded = encoder(
+        image, factor, show)
+
+    decoder(RGBchannels, YCbCrchannels, downsampled, whole_image,
+            blocks, blocks64, image_padded, image, factor, show)
 
 
 if __name__ == '__main__':
