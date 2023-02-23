@@ -1,4 +1,5 @@
 import functions as f
+import matplotlib.pyplot as plt
 
 
 def encoder(image):
@@ -41,7 +42,7 @@ def decoder(Y, Cb, Cr, image_padded, original):
 
 
 def main():
-
+    show = True
     # Read image (3.1)
     image_path = "imagens\\barn_mountains.bmp"
     image = f.plt.imread(image_path)
@@ -55,6 +56,55 @@ def main():
     Y, Cb, Cr, padded = encoder(image)
 
     # decoder(Y, Cb, Cr, padded, image)
+
+    # Whole-image DCT
+    # plt.figure("Whole-image DCT")
+    # Y = dct(Y)
+    # Cb = dct(Cb)
+    # Cr = dct(Cr)
+    # f.visualize_Dct(Y, Cb, Cr)
+
+    # Whole-image inverse DCT
+    # plt.figure("Whole-image Inverse DCT")
+    # Y = idct(Y)
+    # Cb = idct(Cb)
+    # Cr = idct(Cr)
+    # f.visualize_YCbCr(Y, Cb, Cr)
+
+
+    # Blocks DCT
+    block = 8
+    Y = f.blocks_Dct(Y, size=block)
+    Cb = f.blocks_Dct(Cb, size=block)
+    Cr = f.blocks_Dct(Cr, size=block)
+    if show:
+        plt.figure("Block DCT (8x8)")
+        f.visualize_Dct(Y, Cb, Cr)
+
+    # Inverse Block DCT
+    Y = f.blocks_Idct(Y, size=block)
+    Cb = f.blocks_Idct(Cb, size=block)
+    Cr = f.blocks_Idct(Cr, size=block)
+    if show:
+        plt.figure("Block Inverse DCT")
+        f.visualize_YCbCr(Y, Cb, Cr)
+
+    block = 64
+    dY = f.blocks_Dct(Y, size=block)
+    dCb = f.blocks_Dct(Cb, size=block)
+    dCr = f.blocks_Dct(Cr, size=block)
+    if show:
+        plt.figure("Block DCT (64x64)")
+        f.visualize_Dct(dY, dCb, dCr)
+
+    # Inverse Block DCT
+    Y = f.blocks_Idct(Y, size=block)
+    Cb = f.blocks_Idct(Cb, size=block)
+    Cr = f.blocks_Idct(Cr, size=block)
+    if show:
+        plt.figure("Block Inverse DCT")
+        f.visualize_YCbCr(Y, Cb, Cr)
+    
 
 
 if __name__ == '__main__':
