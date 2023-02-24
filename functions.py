@@ -195,7 +195,7 @@ def visualize_YCbCr(Y, Cb, Cr, colormap):
     plt.axis('off')
     plt.title('Cr')
 
-    # plt.show()
+    plt.show()
 
 
 # Downsampling of the image (6.1)
@@ -336,11 +336,11 @@ def visualize_Dct(x1: np.ndarray, x2: np.ndarray, x3: np.ndarray) -> None:
 
     visualize_YCbCr(x1log, x2log, x3log, "gray")
 
-    plt.subplot(2, 2, 4)
-    plt.imshow(merge_RGB(x1log, x2log, x3log))
-    plt.title("DCT")
-    plt.axis("off")
-    plt.show()
+    # plt.subplot(2, 2, 4)
+    # plt.imshow(merge_RGB(x1log, x2log, x3log))
+    # plt.title("DCT")
+    # plt.axis("off")
+    # plt.show()
 
 
 def blocks_Dct(x: np.ndarray, size: int = 8) -> np.ndarray:
