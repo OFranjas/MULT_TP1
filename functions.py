@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as clr
 from scipy import fftpack as fft
 import cv2
-import scipy.fftpack as scp
 
 
 def colormap(name, colors, N):
@@ -55,24 +54,22 @@ def merge_RGB(R, G, B):
 
 # Visualize the image and each one of its channels (with the adequate colormap) (3.5)
 # Gray colormap for the channels
-def visualize_RGB(R, G, B):
-
-    cmGray = colormap('cmGray', [(0, 0, 0), (1, 1, 1)], 256)
+def visualize_RGB(R, G, B, colormap):
 
     plt.figure("RGB channels")
 
     plt.subplot(2, 2, 1)
-    plt.imshow(R, cmap=cmGray)
+    plt.imshow(R, cmap=colormap)
     plt.axis('off')
     plt.title('R')
 
     plt.subplot(2, 2, 2)
-    plt.imshow(G, cmap=cmGray)
+    plt.imshow(G, cmap=colormap)
     plt.axis('off')
     plt.title('G')
 
     plt.subplot(2, 2, 3)
-    plt.imshow(B, cmap=cmGray)
+    plt.imshow(B, cmap=colormap)
     plt.axis('off')
     plt.title('B')
 
@@ -181,22 +178,20 @@ def YCbCr_to_RGB(Y, Cb, Cr):
 # Visualize the image and its YCbCr components (5.2)
 
 
-def visualize_YCbCr(Y, Cb, Cr):
-
-    cmGray = colormap('cmGray', [(0, 0, 0), (1, 1, 1)], 256)
+def visualize_YCbCr(Y, Cb, Cr, colormap):
 
     plt.subplot(2, 2, 1)
-    plt.imshow(Y, cmap=cmGray)
+    plt.imshow(Y, cmap=colormap)
     plt.axis('off')
     plt.title('Y')
 
     plt.subplot(2, 2, 2)
-    plt.imshow(Cb, cmap=cmGray)
+    plt.imshow(Cb, cmap=colormap)
     plt.axis('off')
     plt.title('Cb')
 
     plt.subplot(2, 2, 3)
-    plt.imshow(Cr, cmap=cmGray)
+    plt.imshow(Cr, cmap=colormap)
     plt.axis('off')
     plt.title('Cr')
 
@@ -303,12 +298,12 @@ def upsampling(Y, Cb_d, Cr_d, factor, shape):
         percent_cb = factor[0]/factor[1]
         percent_cr = factor[0]/factor[2]
 
-        #y_u = int(Y_d.shape[1] * percent_y)
+        # y_u = int(Y_d.shape[1] * percent_y)
         cb_u = int(Cb_d.shape[1] * percent_cb)
         cr_u = int(Cr_d.shape[1] * percent_cr)
 
         if (shape[1] % 2 != 0):
-            #y_u += 1
+            # y_u += 1
             cb_u += 1
             cr_u += 1
 
@@ -339,7 +334,7 @@ def visualize_Dct(x1: np.ndarray, x2: np.ndarray, x3: np.ndarray) -> None:
 
     #image = merge_RGB(x1log, x2log, x3log)
 
-    visualize_YCbCr(x1log, x2log, x3log)
+    visualize_YCbCr(x1log, x2log, x3log, "gray")
 
     plt.subplot(2, 2, 4)
     plt.imshow(merge_RGB(x1log, x2log, x3log))
