@@ -54,22 +54,28 @@ def merge_RGB(R, G, B):
 
 # Visualize the image and each one of its channels (with the adequate colormap) (3.5)
 # Gray colormap for the channels
-def visualize_RGB(R, G, B, colormap):
+def visualize_RGB(R, G, B, colormapx, size):
 
-    plt.figure("RGB channels")
+    plt.figure("RGB channels", figsize=size)
+
+    cmRed = colormap("Red", [(0, 0, 0), (1, 0, 0)], 256)
+
+    cmBlue = colormap("Blue", [(0, 0, 0), (0, 0, 1)], 256)
+
+    cmGreen = colormap("Green", [(0, 0, 0), (0, 1, 0)], 256)
 
     plt.subplot(2, 2, 1)
-    plt.imshow(R, cmap=colormap)
+    plt.imshow(R, cmap=cmRed)
     plt.axis('off')
     plt.title('R')
 
     plt.subplot(2, 2, 2)
-    plt.imshow(G, cmap=colormap)
+    plt.imshow(G, cmap=cmGreen)
     plt.axis('off')
     plt.title('G')
 
     plt.subplot(2, 2, 3)
-    plt.imshow(B, cmap=colormap)
+    plt.imshow(B, cmap=cmBlue)
     plt.axis('off')
     plt.title('B')
 
@@ -103,14 +109,6 @@ def padding(image):
 
     image_nova = np.hstack([image_nova, rep])
 
-    plt.imshow(image_nova)
-
-    plt.title("Imagem com padding")
-
-    plt.axis('off')
-
-    plt.show()
-
     return image_nova
 
 
@@ -119,14 +117,6 @@ def unpadding(image, origin):
     [nl, nc, x] = origin.shape
 
     original_image = image[:nl, :nc]
-
-    plt.imshow(original_image)
-
-    plt.title("Imagem depois de unpadding")
-
-    plt.axis('off')
-
-    plt.show()
 
     return original_image
 
@@ -180,17 +170,17 @@ def YCbCr_to_RGB(Y, Cb, Cr):
 
 def visualize_YCbCr(Y, Cb, Cr, colormap):
 
-    plt.subplot(2, 2, 1)
+    plt.subplot(1, 3, 1)
     plt.imshow(Y, cmap=colormap)
     plt.axis('off')
     plt.title('Y')
 
-    plt.subplot(2, 2, 2)
+    plt.subplot(1, 3, 2)
     plt.imshow(Cb, cmap=colormap)
     plt.axis('off')
     plt.title('Cb')
 
-    plt.subplot(2, 2, 3)
+    plt.subplot(1, 3, 3)
     plt.imshow(Cr, cmap=colormap)
     plt.axis('off')
     plt.title('Cr')
@@ -198,141 +188,67 @@ def visualize_YCbCr(Y, Cb, Cr, colormap):
     plt.show()
 
 
-# Downsampling of the image (6.1)
-def downsampling(Y, Cb, Cr, factor):
+def downsamplingV2(Y, Cb, Cr, factor):
+
+    if factor == [4, 4, 4]:
+
+        return Y, Cb, Cr
+
+    resCb, resCr = Cb, Cr
+
+    horizontal = False
+
+    perc_Cb = factor[1]/factor[0]
 
     if factor[2] == 0:
 
-        #percent_y = factor[0]/factor[1]
-        percent_cb = factor[0]/factor[1]
-        percent_cr = factor[0]/factor[1]
+        perc_Cr = perc_Cb
 
-        #y_d = int(Y.shape[1] / percent_y)
-        cb_d = int(Cb.shape[1] / percent_cb)
-        cr_d = int(Cr.shape[1] / percent_cr)
-        #y_dy = int(Y.shape[0] / percent_y)
-        cb_dy = int(Cb.shape[0] / percent_cb)
-        cr_dy = int(Cr.shape[0] / percent_cr)
-
-        # Y_down = cv2.resize(
-        #     Y, (y_d, y_dy), interpolation=cv2.INTER_AREA)
-
-        Cb_down = cv2.resize(
-            Cb, (cb_d, cb_dy), interpolation=cv2.INTER_AREA)
-
-        Cr_down = cv2.resize(
-            Cr, (cr_d, cr_dy), interpolation=cv2.INTER_AREA)
-
-        return Y, Cb_down, Cr_down
-
-    elif factor[1] == 0:
-
-        print("Error: Factor 1 is 0")
+        horizontal = True
 
     else:
 
-        percent_y = factor[0]/factor[1]
-        percent_cb = factor[0]/factor[1]
-        percent_cr = factor[0]/factor[2]
+        perc_Cr = factor[2]/factor[0]
 
-        y_d = int(Y.shape[1]/percent_y)
-        cb_d = int(Cb.shape[1]/percent_cb)
-        cr_d = int(Cr.shape[1]/percent_cr)
+    if horizontal:
 
-        Y_down = cv2.resize(
-            src=Y, dsize=(y_d, Y.shape[0]), interpolation=cv2.INTER_AREA)
+        resCb = cv2.resize(Cb, None, perc_Cb, perc_Cb, cv2.INTER_AREA)
 
-        Cb_down = cv2.resize(
-            src=Cb, dsize=(cb_d, Y.shape[0]), interpolation=cv2.INTER_AREA)
-
-        Cr_down = cv2.resize(
-            src=Cr, dsize=(cr_d, Y.shape[0]), interpolation=cv2.INTER_AREA)
-
-        return Y, Cb_down, Cr_down
-
-
-# Upsampling of the image (6.1)
-def upsampling(Y, Cb_d, Cr_d, factor, shape):
-
-    if factor[2] == 0:
-
-        #percent_y = factor[0]/factor[1]
-        percent_cb = factor[0]/factor[1]
-        percent_cr = factor[0]/factor[1]
-
-        #y_u = int(Y_d.shape[1] * percent_y)
-        cb_u = int(Cb_d.shape[1] * percent_cb)
-        cr_u = int(Cr_d.shape[1] * percent_cr)
-        #y_uy = int(Y_d.shape[0] * percent_y)
-        cb_uy = int(Cb_d.shape[0] * percent_cb)
-        cr_uy = int(Cr_d.shape[0] * percent_cr)
-
-        if (shape[1] % 2 != 0):
-            #y_u += 1
-            cb_u += 1
-            cr_u += 1
-
-        if (shape[0] % 2 != 0):
-            #y_uy += 1
-            cb_uy += 1
-            cr_uy += 1
-
-        # Y_up = cv2.resize(
-        #     Y_d, (y_u, y_uy), interpolation=cv2.INTER_CUBIC)
-
-        Cb_up = cv2.resize(
-            Cb_d, (cb_u, cb_uy), interpolation=cv2.INTER_CUBIC)
-
-        Cr_up = cv2.resize(
-            Cr_d, (cr_u, cr_uy), interpolation=cv2.INTER_CUBIC)
-
-        return Y, Cb_up, Cr_up
-
-    elif factor[1] == 0:
-
-        print("Error: Factor 1 is 0")
+        resCr = cv2.resize(Cr, None, perc_Cr, perc_Cr, cv2.INTER_AREA)
 
     else:
 
-        #percent_y = factor[0]/factor[1]
-        percent_cb = factor[0]/factor[1]
-        percent_cr = factor[0]/factor[2]
+        resCb = cv2.resize(Cb, None, 1, perc_Cb, cv2.INTER_AREA)
 
-        # y_u = int(Y_d.shape[1] * percent_y)
-        cb_u = int(Cb_d.shape[1] * percent_cb)
-        cr_u = int(Cr_d.shape[1] * percent_cr)
+        resCr = cv2.resize(Cr, None, 1, perc_Cr, cv2.INTER_AREA)
 
-        if (shape[1] % 2 != 0):
-            # y_u += 1
-            cb_u += 1
-            cr_u += 1
-
-        # Y_up = cv2.resize(
-        #     src=Y_d, dsize=(y_u, Y_d.shape[0]), interpolation=cv2.INTER_CUBIC)
-
-        Cb_up = cv2.resize(
-            src=Cb_d, dsize=(cb_u, Y.shape[0]), interpolation=cv2.INTER_CUBIC)
-
-        Cr_up = cv2.resize(
-            src=Cr_d, dsize=(cr_u, Y.shape[0]), interpolation=cv2.INTER_CUBIC)
-
-        return Y, Cb_up, Cr_up
+    return Y, resCb, resCr
 
 
-def dct(X: np.ndarray) -> np.ndarray:
+def upsamplingV2(Y, Cb, Cr, factor):
+
+    size = Y.shape[::-1]
+
+    resCb = cv2.resize(Cb, size, cv2.INTER_CUBIC)
+    resCr = cv2.resize(Cr, size, cv2.INTER_CUBIC)
+
+    return Y, resCb, resCr
+
+
+def dct(X):
     return fft.dct(fft.dct(X, norm="ortho").T, norm="ortho").T
 
 
-def idct(X: np.ndarray) -> np.ndarray:
+def idct(X):
     return fft.idct(fft.idct(X, norm="ortho").T, norm="ortho").T
 
 
-def visualize_Dct(x1: np.ndarray, x2: np.ndarray, x3: np.ndarray) -> None:
+def visualize_Dct(x1, x2, x3):
     x1log = np.log(np.abs(x1) + 0.0001)
     x2log = np.log(np.abs(x2) + 0.0001)
     x3log = np.log(np.abs(x3) + 0.0001)
 
-    #image = merge_RGB(x1log, x2log, x3log)
+    # image = merge_RGB(x1log, x2log, x3log)
 
     visualize_YCbCr(x1log, x2log, x3log, "gray")
 
@@ -343,7 +259,7 @@ def visualize_Dct(x1: np.ndarray, x2: np.ndarray, x3: np.ndarray) -> None:
     # plt.show()
 
 
-def blocks_Dct(x: np.ndarray, size: int = 8) -> np.ndarray:
+def blocks_Dct(x, size=8):
     h, w = x.shape
     newImg = np.empty(x.shape)
     for i in range(0, h, size):
@@ -352,10 +268,268 @@ def blocks_Dct(x: np.ndarray, size: int = 8) -> np.ndarray:
     return newImg
 
 
-def blocks_Idct(x: np.ndarray, size: int = 8) -> np.ndarray:
+def blocks_Idct(x, size=8):
     h, w = x.shape
     newImg = np.empty(x.shape)
     for i in range(0, h, size):
         for j in range(0, w, size):
             newImg[i:i+size, j:j+size] = idct(x[i:i+size, j:j+size])
     return newImg
+
+
+def quantization(Y, Cb, Cr, quality):
+
+    QY = np.array([
+        [16, 11, 10, 16, 24,  40,  51,  61],
+        [12, 12, 14, 19, 26,  58,  60,  55],
+        [14, 13, 16, 24, 40,  57,  69,  56],
+        [14, 17, 22, 29, 51,  87,  80,  62],
+        [18, 22, 37, 56, 68,  109, 103, 77],
+        [24, 35, 55, 64, 81,  104, 113, 92],
+        [49, 64, 78, 87, 103, 121, 120, 101],
+        [72, 92, 95, 98, 112, 100, 103, 99]])
+
+    QC = np.array([
+        [17, 18, 24, 47, 99, 99, 99, 99],
+        [18, 21, 26, 66, 99, 99, 99, 99],
+        [24, 26, 56, 99, 99, 99, 99, 99],
+        [47, 66, 99, 99, 99, 99, 99, 99],
+        [99, 99, 99, 99, 99, 99, 99, 99],
+        [99, 99, 99, 99, 99, 99, 99, 99],
+        [99, 99, 99, 99, 99, 99, 99, 99],
+        [99, 99, 99, 99, 99, 99, 99, 99]])
+
+    if (quality >= 50):
+
+        x = (100-quality)/50
+
+    else:
+        x = 50/quality
+
+    QY = np.round(QY*x)
+    QC = np.round(QC*x)
+
+    QY[QY > 255] = 255
+    QC[QC > 255] = 255
+
+    QY[QY < 1] = 1
+    QC[QC < 1] = 1
+
+    resY = np.empty(Y.shape, dtype=Y.dtype)
+    resCb = np.empty(Cb.shape, dtype=Cb.dtype)
+    resCr = np.empty(Cr.shape, dtype=Cr.dtype)
+
+    for i in range(0, Y.shape[0], 8):
+
+        for j in range(0, Y.shape[1], 8):
+
+            resY[i:i+8, j:j+8] = Y[i:i+8, j:j+8]/QY
+
+    resY = np.round(resY)
+
+    for i in range(0, Cb.shape[0], 8):
+
+        for j in range(0, Cb.shape[1], 8):
+
+            resCb[i:i+8, j:j+8] = Cb[i:i+8, j:j+8]/QC
+
+    resCb = np.round(resCb)
+
+    for i in range(0, Cr.shape[0], 8):
+
+        for j in range(0, Cr.shape[1], 8):
+
+            resCr[i:i+8, j:j+8] = Cr[i:i+8, j:j+8]/QC
+
+    resCr = np.round(resCr)
+
+    return resY, resCb, resCr
+
+
+def desquantization(Y, Cb, Cr, quality):
+
+    QY = np.array([
+        [16, 11, 10, 16, 24,  40,  51,  61],
+        [12, 12, 14, 19, 26,  58,  60,  55],
+        [14, 13, 16, 24, 40,  57,  69,  56],
+        [14, 17, 22, 29, 51,  87,  80,  62],
+        [18, 22, 37, 56, 68,  109, 103, 77],
+        [24, 35, 55, 64, 81,  104, 113, 92],
+        [49, 64, 78, 87, 103, 121, 120, 101],
+        [72, 92, 95, 98, 112, 100, 103, 99]])
+
+    QC = np.array([
+        [17, 18, 24, 47, 99, 99, 99, 99],
+        [18, 21, 26, 66, 99, 99, 99, 99],
+        [24, 26, 56, 99, 99, 99, 99, 99],
+        [47, 66, 99, 99, 99, 99, 99, 99],
+        [99, 99, 99, 99, 99, 99, 99, 99],
+        [99, 99, 99, 99, 99, 99, 99, 99],
+        [99, 99, 99, 99, 99, 99, 99, 99],
+        [99, 99, 99, 99, 99, 99, 99, 99]])
+
+    if (quality >= 50):
+
+        x = (100-quality)/50
+    else:
+        x = 50/quality
+
+    QY = np.round(QY*x)
+    QC = np.round(QC*x)
+
+    QY[QY > 255] = 255
+    QC[QC > 255] = 255
+
+    QY[QY < 1] = 1
+    QC[QC < 1] = 1
+
+    resY = np.empty(Y.shape)
+    resCb = np.empty(Cb.shape)
+    resCr = np.empty(Cr.shape)
+
+    for i in range(0, Y.shape[0], 8):
+
+        for j in range(0, Y.shape[1], 8):
+
+            resY[i:i+8, j:j+8] = Y[i:i+8, j:j+8]*QY
+
+    resY = np.round(resY)
+
+    for i in range(0, Cb.shape[0], 8):
+
+        for j in range(0, Cb.shape[1], 8):
+
+            resCb[i:i+8, j:j+8] = Cb[i:i+8, j:j+8]*QC
+
+    resCb = np.round(resCb)
+
+    for i in range(0, Cr.shape[0], 8):
+
+        for j in range(0, Cr.shape[1], 8):
+
+            resCr[i:i+8, j:j+8] = Cr[i:i+8, j:j+8]*QC
+
+    resCr = np.round(resCr)
+
+    return resY, resCb, resCr
+
+
+def dpcm(Y, Cb, Cr):
+
+    # Y
+    dc = Y[0, 0]
+
+    l, c = Y.shape
+
+    for i in range(0, l, 8):
+
+        for j in range(0, c, 8):
+
+            if i == 0 and j == 0:
+                continue
+
+            aux = Y[i, j]
+            dif = aux - dc
+            dc = aux
+            Y[i, j] = dif
+
+    # Cb
+    dc = Cb[0, 0]
+
+    l, c = Cb.shape
+
+    for i in range(0, l, 8):
+
+        for j in range(0, c, 8):
+
+            if i == 0 and j == 0:
+                continue
+
+            aux = Cb[i, j]
+            dif = aux - dc
+            dc = aux
+            Cb[i, j] = dif
+
+    # CR
+    dc = Cr[0, 0]
+
+    l, c = Cr.shape
+
+    for i in range(0, l, 8):
+
+        for j in range(0, c, 8):
+
+            if i == 0 and j == 0:
+                continue
+
+            aux = Cr[i, j]
+            dif = aux - dc
+            dc = aux
+            Cr[i, j] = dif
+
+    return Y, Cb, Cr
+
+
+def idpcm(Y, Cb, Cr):
+
+    # Y
+
+    l, c = Y.shape
+
+    dc = Y[0, 0]
+
+    for i in range(0, l, 8):
+
+        for j in range(0, c, 8):
+
+            if i == 0 and j == 0:
+                continue
+
+            aux = Y[i, j]
+            soma = dc + aux
+
+            dc = soma
+
+            Y[i, j] = soma
+
+    # Cb
+
+    l, c = Cb.shape
+
+    dc = Cb[0, 0]
+
+    for i in range(0, l, 8):
+
+        for j in range(0, c, 8):
+
+            if i == 0 and j == 0:
+                continue
+
+            aux = Cb[i, j]
+            soma = dc + aux
+
+            dc = soma
+
+            Cb[i, j] = soma
+
+    # Cr
+
+    l, c = Cr.shape
+
+    dc = Cr[0, 0]
+
+    for i in range(0, l, 8):
+
+        for j in range(0, c, 8):
+
+            if i == 0 and j == 0:
+                continue
+
+            aux = Cr[i, j]
+            soma = dc + aux
+
+            dc = soma
+
+            Cr[i, j] = soma
+
+    return Y, Cb, Cr
