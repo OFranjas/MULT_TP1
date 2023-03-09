@@ -1,5 +1,7 @@
 import functions as f
 import matplotlib.pyplot as plt
+import numpy as np
+from PIL import Image
 
 QUALITY = 25
 
@@ -135,6 +137,28 @@ def decoder(YCbCr, original):
         plt.show()
 
     return unpadded
+
+
+
+def metricas(filepath: str, qf: int = 75, show: bool = True, met: bool = True) -> np.ndarray:
+    original = np.array(Image.open(filepath))
+    y, cb, cr, shape, yOriginal = encoder(original, (4,2,0), qf=qf)
+    compressed, yReconstructed = decoder((y,cb,cr), shape, qf=qf)
+    diff = np.absolute(yOriginal - yReconstructed)
+    if show:
+        plt.figure("Compressed")
+        f.visualize_image(compressed)
+        plt.figure("Difference")
+        f.visualize_image(diff, cmap="gray")
+    mse = f.MSE(original, compressed)
+    rmse = f.RMSE(mse)
+    snr = f.SNR(original, mse)
+    psnr = f.PSNR(original, mse)
+    if met:
+        print(f"MSE: {mse:.3f}\nRMSE: {rmse:.3f}")
+        print(f"SNR: {snr:.3f} dB\nPSNR: {psnr:.3f} dB")
+    plt.show()
+    return compressed, {'mse': mse, 'rmse': rmse, 'snr': snr, 'psnr': psnr}
 
 
 def main():

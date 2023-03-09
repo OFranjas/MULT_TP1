@@ -52,6 +52,16 @@ def merge_RGB(R, G, B):
     return image
 
 
+def visualize_image(image: np.ndarray, **kwargs: dict[str, any]) -> None:
+    # Get keyword arguments
+    cmap = kwargs.get("cmap", None)
+
+    # Create a new figure to display the image
+    plt.axis("off")
+    plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0.01)
+    plt.imshow(image, cmap=cmap)
+
+
 # Visualize the image and each one of its channels (with the adequate colormap) (3.5)
 # Gray colormap for the channels
 def visualize_RGB(R, G, B, colormapx, size):
@@ -533,3 +543,27 @@ def idpcm(Y, Cb, Cr):
             Cr[i, j] = soma
 
     return Y, Cb, Cr
+
+
+def MSE(x: np.ndarray, y: np.ndarray) -> np.float64:
+    h, w = x[:,:,0].shape
+    x = x.astype(np.float64)
+    y = y.astype(np.float64)
+    coef = 1 / (h * w)
+    return coef * (np.sum((x - y) ** 2))
+
+
+def RMSE(mse: np.float64) -> np.float64:
+    return mse ** (1 / 2)
+
+def SNR(x: np.ndarray, mse: np.float64) -> np.float64:
+    h, w = x[:,:,0].shape
+    x = x.astype(np.float64)
+    coef =  1 / (w * h)
+    power = coef * np.sum(x ** 2)
+    return 10 * np.log10(power / mse)
+
+
+def PSNR(x: np.ndarray, mse: np.float64) -> np.float64:
+    return 10 * np.log10((np.max(x) ** 2) / mse)
+
