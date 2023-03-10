@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-QUALITY = 25
+QUALITY = 10
 
 SHOW = False
 
@@ -63,12 +63,15 @@ def encoder(image, colormap):
 
     # Quantization
     Y_q, Cb_q, Cr_q = f.quantization(Y_b, Cb_b, Cr_b, QUALITY)
+    print("Quantização - ", Y_q[8:16, 8:16])
     if SHOW:
         plt.figure("Quantization", figsize=FIG_SIZE)
         f.visualize_Dct(Y_q, Cb_q, Cr_q)
 
     # DPCM
     Y_dpcm, Cb_dpcm, Cr_dpcm = f.dpcm(Y_q, Cb_q, Cr_q)
+    print("DPCM - ", Y_dpcm[8:16, 8:16])
+
     if SHOW:
         plt.figure("DPCM", figsize=FIG_SIZE)
         f.visualize_Dct(Y_dpcm, Cb_dpcm, Cr_dpcm)
@@ -80,6 +83,8 @@ def decoder(YCbCr, original):
 
     # Inverse DPCM
     Y_idpcm, Cb_idpcm, Cr_idpcm = f.idpcm(YCbCr[0], YCbCr[1], YCbCr[2])
+    print("IDPCM - ", Y_idpcm[8:16, 8:16])
+
     if SHOW:
         plt.figure("Inverse DPCM", figsize=FIG_SIZE)
         f.visualize_Dct(Y_idpcm, Cb_idpcm, Cr_idpcm)
@@ -119,7 +124,7 @@ def decoder(YCbCr, original):
 
     # Visualiza imagem com canais separados
     if SHOW:
-        f.visualize_RGB(R, G, B, "gray")
+        f.visualize_RGB(R, G, B, "gray", FIG_SIZE)
 
     image_padded = f.merge_RGB(R, G, B)
 
@@ -141,9 +146,10 @@ def decoder(YCbCr, original):
 
 def metricas(filepath: str, qf: int = 75, show: bool = True, met: bool = True) -> np.ndarray:
     original = np.array(Image.open(filepath))
-    y, cb, cr, shape, yOriginal = encoder(original, (4, 2, 0))
+    y, cb, cr, shape, yOriginal = encoder(original, "gray")
     compressed, yReconstructed = decoder((y, cb, cr), original)
     diff = np.absolute(yOriginal - yReconstructed)
+    print("Diferença max - ", np.max(diff))
     if show:
         plt.figure("Comprimida vs Diferença", FIG_SIZE)
         plt.subplot(1, 2, 1)
@@ -165,11 +171,6 @@ def metricas(filepath: str, qf: int = 75, show: bool = True, met: bool = True) -
         print(f"SNR: {snr:.3f} dB\nPSNR: {psnr:.3f} dB")
     plt.show()
     return compressed, {'mse': mse, 'rmse': rmse, 'snr': snr, 'psnr': psnr}
-
-
-def codec(src, qf):
-
-    comprimida = metricas(src, qf=qf, show=True, met=False)
 
 
 def main():

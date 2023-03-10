@@ -325,6 +325,9 @@ def quantization(Y, Cb, Cr, quality):
     QY[QY < 1] = 1
     QC[QC < 1] = 1
 
+    QC = QC.astype(np.uint8)
+    QY = QY.astype(np.uint8)
+
     resY = np.empty(Y.shape, dtype=Y.dtype)
     resCb = np.empty(Cb.shape, dtype=Cb.dtype)
     resCr = np.empty(Cr.shape, dtype=Cr.dtype)
@@ -335,7 +338,7 @@ def quantization(Y, Cb, Cr, quality):
 
             resY[i:i+8, j:j+8] = Y[i:i+8, j:j+8]/QY
 
-    resY = np.round(resY)
+    resY = np.round(resY).astype(int)
 
     for i in range(0, Cb.shape[0], 8):
 
@@ -343,7 +346,7 @@ def quantization(Y, Cb, Cr, quality):
 
             resCb[i:i+8, j:j+8] = Cb[i:i+8, j:j+8]/QC
 
-    resCb = np.round(resCb)
+    resCb = np.round(resCb).astype(int)
 
     for i in range(0, Cr.shape[0], 8):
 
@@ -351,7 +354,7 @@ def quantization(Y, Cb, Cr, quality):
 
             resCr[i:i+8, j:j+8] = Cr[i:i+8, j:j+8]/QC
 
-    resCr = np.round(resCr)
+    resCr = np.round(resCr).astype(int)
 
     return resY, resCb, resCr
 
@@ -393,6 +396,9 @@ def desquantization(Y, Cb, Cr, quality):
     QY[QY < 1] = 1
     QC[QC < 1] = 1
 
+    QY = QY.astype(np.uint8)
+    QC = QC.astype(np.uint8)
+
     resY = np.empty(Y.shape)
     resCb = np.empty(Cb.shape)
     resCr = np.empty(Cr.shape)
@@ -403,7 +409,7 @@ def desquantization(Y, Cb, Cr, quality):
 
             resY[i:i+8, j:j+8] = Y[i:i+8, j:j+8]*QY
 
-    resY = np.round(resY)
+    resY = np.round(resY).astype(float)
 
     for i in range(0, Cb.shape[0], 8):
 
@@ -411,7 +417,7 @@ def desquantization(Y, Cb, Cr, quality):
 
             resCb[i:i+8, j:j+8] = Cb[i:i+8, j:j+8]*QC
 
-    resCb = np.round(resCb)
+    resCb = np.round(resCb).astype(float)
 
     for i in range(0, Cr.shape[0], 8):
 
@@ -419,7 +425,7 @@ def desquantization(Y, Cb, Cr, quality):
 
             resCr[i:i+8, j:j+8] = Cr[i:i+8, j:j+8]*QC
 
-    resCr = np.round(resCr)
+    resCr = np.round(resCr).astype(float)
 
     return resY, resCb, resCr
 
@@ -546,7 +552,7 @@ def idpcm(Y, Cb, Cr):
 
 
 def MSE(x: np.ndarray, y: np.ndarray) -> np.float64:
-    h, w = x[:,:,0].shape
+    h, w = x[:, :, 0].shape
     x = x.astype(np.float64)
     y = y.astype(np.float64)
     coef = 1 / (h * w)
@@ -556,14 +562,14 @@ def MSE(x: np.ndarray, y: np.ndarray) -> np.float64:
 def RMSE(mse: np.float64) -> np.float64:
     return mse ** (1 / 2)
 
+
 def SNR(x: np.ndarray, mse: np.float64) -> np.float64:
-    h, w = x[:,:,0].shape
+    h, w = x[:, :, 0].shape
     x = x.astype(np.float64)
-    coef =  1 / (w * h)
+    coef = 1 / (w * h)
     power = coef * np.sum(x ** 2)
     return 10 * np.log10(power / mse)
 
 
 def PSNR(x: np.ndarray, mse: np.float64) -> np.float64:
     return 10 * np.log10((np.max(x) ** 2) / mse)
-
