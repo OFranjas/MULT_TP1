@@ -12,7 +12,7 @@ FACTOR = [4, 2, 0]
 IMAGES = ["imagens\\barn_mountains.bmp",
           "imagens\\logo.bmp", "imagens\\peppers.bmp"]
 
-FIG_SIZE = (12,7)
+FIG_SIZE = (12, 7)
 
 
 def encoder(image, colormap):
@@ -73,7 +73,7 @@ def encoder(image, colormap):
         plt.figure("DPCM", figsize=FIG_SIZE)
         f.visualize_Dct(Y_dpcm, Cb_dpcm, Cr_dpcm)
 
-    return [Y_dpcm, Cb_dpcm, Cr_dpcm]
+    return Y_dpcm, Cb_dpcm, Cr_dpcm, image.shape, Y
 
 
 def decoder(YCbCr, original):
@@ -136,34 +136,49 @@ def decoder(YCbCr, original):
 
         plt.show()
 
-    return unpadded
-
+    return unpadded, Y_u
 
 
 def metricas(filepath: str, qf: int = 75, show: bool = True, met: bool = True) -> np.ndarray:
     original = np.array(Image.open(filepath))
-    y, cb, cr, shape, yOriginal = encoder(original, (4,2,0), qf=qf)
-    compressed, yReconstructed = decoder((y,cb,cr), shape, qf=qf)
+    y, cb, cr, shape, yOriginal = encoder(original, (4, 2, 0))
+    compressed, yReconstructed = decoder((y, cb, cr), original)
     diff = np.absolute(yOriginal - yReconstructed)
     if show:
-        plt.figure("Compressed")
+        plt.figure("Comprimida vs Diferença", FIG_SIZE)
+        plt.subplot(1, 2, 1)
+        plt.title("Comprimida")
         f.visualize_image(compressed)
-        plt.figure("Difference")
+        plt.axis('off')
+        plt.subplot(1, 2, 2)
+        plt.title("Diferença")
+        plt.axis('off')
         f.visualize_image(diff, cmap="gray")
+        plt.show()
     mse = f.MSE(original, compressed)
     rmse = f.RMSE(mse)
     snr = f.SNR(original, mse)
     psnr = f.PSNR(original, mse)
     if met:
+        print(f"QF: {qf}")
         print(f"MSE: {mse:.3f}\nRMSE: {rmse:.3f}")
         print(f"SNR: {snr:.3f} dB\nPSNR: {psnr:.3f} dB")
     plt.show()
     return compressed, {'mse': mse, 'rmse': rmse, 'snr': snr, 'psnr': psnr}
 
 
+def codec(src, qf):
+
+    comprimida = metricas(src, qf=qf, show=True, met=False)
+
+
 def main():
 
+    count = 0
+
     for image_path in IMAGES:
+
+        count += 1
 
         image = f.plt.imread(image_path)
 
@@ -176,22 +191,25 @@ def main():
         blocks64 = encoder(
             image, cmUser)
 
-        final = decoder(blocks64, image)
+        final, Y_u = decoder(blocks64, image)
 
-        plt.figure("Inicial vs Final", figsize=FIG_SIZE)
+        # Show Initial vs Final
+        plt.figure("Initial vs Final", figsize=FIG_SIZE)
+
         plt.subplot(1, 2, 1)
+        plt.title("Initial")
         plt.imshow(image, cmap="gray")
-        plt.title("Inicial")
-
-        plt.axis("off")
+        plt.axis('off')
 
         plt.subplot(1, 2, 2)
-        plt.imshow(final, cmap="gray")
         plt.title("Final")
-
-        plt.axis("off")
-
+        plt.imshow(final, cmap="gray")
+        plt.axis('off')
         plt.show()
+
+        # Codec
+        print(f"Imagem {count}:")
+        metricas(image_path, qf=QUALITY, show=True, met=True)
 
 
 if __name__ == '__main__':
